@@ -1,6 +1,6 @@
 html {
   background-color: #E4E9FD;
-  background-image: -webkit-linear-gradient(65deg, #271f36 50%, #7c8198 50%);
+  background-image: -webkit-linear-gradient(65deg, #675D50 50%, #A9907E 50%);
   min-height: 1000px;
   font-family: 'helvetica neue';
   background-attachment: fixed;
@@ -65,14 +65,18 @@ button {
   width: 50px;
   border-radius: 50%;
   border-color: transparent;
-  background-color: #098831;
+  background-color: #0b9537;
   color: #fff;
   font-size: 30px;
   padding-bottom: 6px;
   padding-top: 6px;
   border-width: 0;
+  transition: 0.2s;
 }
-
+button:hover{
+  transform:scale(1.1,1.1);
+  transition: 0.2s;
+}
 input[type="text"] {
   text-align: center;
   height: 60px;
@@ -96,6 +100,164 @@ input[type="text"]:focus {
 
 footer {
   color: white;
-
   text-align: center;
+}
+
+.sidebar {
+  height: 100%;
+  width: 20.3125rem;
+  position: fixed;
+  z-index: 1;
+  top: 0;
+  left: -20.3125rem;
+  background-color: #C8B6A6;
+  overflow-x: hidden;
+  transition: 0.7s;
+  padding-top: 60px;
+}
+
+.sidebar a {
+  padding: 8px 8px 8px 32px;
+  text-decoration: none;
+  font-size: 1.5rem;
+  color: #111;
+  display: block;
+  transition: 0.3s;
+}
+
+.sidebar-options:hover {
+  color: white;
+  transform:scale(1.1,1.1);
+}
+
+.sidebar .closebtn {
+  position: absolute;
+  top: 0;
+  right: 10px;
+  font-size: 36px;
+  margin-left: 50px;
+}
+
+.openbtn {
+  font-size: 20px;
+  cursor: pointer;
+  background-color: white;
+  color: #111;
+  padding: 10px 15px;
+  border: none;
+  font-size: x-large;
+  transition: 0.2s;
+}
+
+.openbtn:hover {
+  transform:scale(1.1,1.1);
+  background-color: white;
+  transition: 0.2s;
+}
+
+#main {
+  transition: margin-left .7s;
+  padding: 16px;
+}
+
+/* On smaller screens, where height is less than 450px, change the style of the sidenav (less padding and a smaller font size) */
+@media screen and (max-height: 450px) {
+  .sidebar {padding-top: 15px;}
+  .sidebar a {font-size: 18px;}
+}
+
+.dropdown-wrapper {
+  position: relative;
+  width: 240px;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.3s ease-out;
+}
+.dropdown-wrapper.is-active {
+  border-radius: 5px 5px 0 0;
+  box-shadow: none;
+  border-bottom: none;
+  color: white;
+}
+.dropdown-wrapper.is-active:after {
+  border-color: #ffffff transparent;
+  transform: rotate(180deg);
+  
+}
+.dropdown-wrapper.is-active .dropdown-list {
+  /* border-bottom: 1px solid rgba(0, 0, 0, 0.2); */
+  max-height: 400px;
+}
+
+.dropdown-list {
+  /* Size & position */
+  width: 180px;
+  top: 100%;
+  left: 0;
+  right: 0;
+  /* Styles */
+  /* background: #fff; */
+  /* border-radius: 0 0 5px 5px;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  border-top: none;
+  border-bottom: none; */
+  list-style: none;
+  transition: all 0.3s ease-out;
+  /* Hiding */
+  max-height: 0;
+  overflow: hidden;
+  margin-top: 0px;
+  margin-bottom: 0px;
+  padding-left: 0px;
+  border-left-width: 0px;
+  border-right-width: 0px;
+  margin-left: 125px;
+}
+.dropdown-list li {
+  padding: 0 10px;
+  display: flex;
+  align-content: center;
+  flex-wrap: nowrap;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: baseline;
+}
+.dropdown-list li:hover a {
+  color: white;
+  transform: scale(1.1, 1.1);
+  transition: 0.1s;
+}
+.dropdown-list li:last-of-type a {
+  border: none;
+}
+.dropdown-list a {
+  display: block;
+  font-size: 1.1rem;
+  text-decoration: none;
+  color: #333;
+  padding: 10px 0;
+  transition: all 0.3s ease-out;
+  /* border-bottom: 1px solid #e6e8ea; */
+}
+.dropdown-list li i{
+  color: black;
+}
+@keyframes tilt-shaking {
+  0% { transform: rotate(0deg); }
+  25% { transform: rotate(5deg); }
+  50% { transform: rotate(0eg); }
+  75% { transform: rotate(-5deg); }
+  100% { transform: rotate(0deg); }
+}
+
+.dropdown-list li i:hover{
+  animation: tilt-shaking 0.15s infinite;
+  color: rgb(227, 44, 59);
+}
+.fabutton {
+  background: none;
+  padding: 0px;
+  border: none;
+  width: 40px;
+  font-size: 15px;
 }

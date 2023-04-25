@@ -1,18 +1,35 @@
+require("dotenv").config()
 const express = require("express");
-//const date = require(__dirname+"/date.js");
 const app = express();
 const mongoose = require("mongoose");
 const _ = require('lodash');
+const session = require("express-session");
+const passport = require("passport");
+const passportLocalMongoose = require("passport-local-mongoose");
+const GoogleStrategy = require("passport-google-oauth20").Strategy;
+const findOrCreate = require("mongoose-findorcreate");
+
 
 app.set("view engine", "ejs");
 app.use(express.json());
 app.use(express.urlencoded({extended:true}));
 app.use(express.static(__dirname + '/public'));
 
+app.use(
+    session({
+      secret: process.env.SECRET,
+      resave: false,
+      saveUninitialized: false,
+    })
+  );
+ 
+app.use(passport.initialize());
+app.use(passport.session());
+
 main().catch(err => console.log(err));
 
 async function main() {
-  await mongoose.connect('mongodb+srv://admin-nilaanjann:Fullmetalalchemist0@todolist.nnosv2i.mongodb.net/blogPostsDB');
+    await mongoose.connect('mongodb://localhost:27017/toDoListDB')
 }
 
 const itemsSchema = new mongoose.Schema({
@@ -24,8 +41,20 @@ const listSchema = new mongoose.Schema({
     items: [itemsSchema]
 })
 
-const List = mongoose.model("List", listSchema);
+const userSchema = new mongoose.Schema({
+    username: String,
+    password: String,
+    todayItems: [itemsSchema],
+    varLists: [listSchema],
+    googleId: String
+});
+
+userSchema.plugin(passportLocalMongoose);
+userSchema.plugin(findOrCreate);
+
 const Item = mongoose.model("Item", itemsSchema);
+const List = mongoose.model("List", listSchema);
+const User = mongoose.model("User", userSchema);
 
 const item1 = new Item({
     name: "Welcome to your to-do list!"
@@ -43,113 +72,276 @@ const item3 = new Item({
 
 const defaultItems = [item1, item2, item3];
 
-//const items = ["Eat hot dogs", "Eat more hot dogs", "Eat even more hot dogs"];
-//const workItems = [];
+let arrLists=[];
 
-app.get("/", (req, res) => {
-    //let day = date.getDate();
-    Item.find().then((foundItems, err) => {
-        if(err)
-        {
-            console.log(err);
-        }
-        else if(foundItems.length === 0)
-        {
-            Item.insertMany(defaultItems)
-            .then(() => {
-                console.log("Items have been successfully added to DB");
-                res.render("list", {listTitle: "Today", newListItem: defaultItems, route: "/"});
-            })
-            .catch((err) => {
-                console.log(err);
-            })
-        }
-        else
-        {
-            res.render("list", {listTitle: "Today", newListItem: foundItems, route: "/"});
-        }
-    })
+passport.use(User.createStrategy());
+
+passport.serializeUser(function (user, done) {
+  done(null, user);
 });
 
-app.post("/", (req, res) =>{
+passport.deserializeUser(function (user, done) {
+  done(null, user);
+});
+  
+passport.use(
+    new GoogleStrategy(
+      {
+        clientID: process.env.CLIENT_ID,
+        clientSecret: process.env.CLIENT_SECRET,
+        callbackURL: "http://localhost:3000/auth/google/home",
+        userProfileURL: "https://www.googleapis.com/oauth2/v3/userinfo",
+      },
+      function (accessToken, refreshToken, profile, cb) {
+        User.findOrCreate({ googleId: profile.id }, function (err, user) {
+            return cb(err, user);
+        });
+      }
+    )
+  );
+
+app.get("/", (req, res)=>{
+    res.render("start");
+})
+
+app.get("/register", (req, res)=>{
+    res.render("register");
+});
+
+app.post("/register", (req, res) => {
+    User.register(
+      { username: req.body.username },
+      req.body.password,
+      (err, user) => {
+        if (err) {
+          console.log(err);
+          res.redirect("/login");
+        } else {
+          passport.authenticate("local")(req, res, () => {
+            res.redirect("/home");
+          });
+        }
+      }
+    )});
+
+app.get('/auth/google',
+    passport.authenticate('google', { scope:
+        ['profile' ] }
+));
+  
+
+app.get(
+    "/auth/google/home",
+    passport.authenticate("google", { failureRedirect: "/login" }),
+    function (req, res) {
+      res.redirect("/home");
+    }
+);
+
+app.get("/login", (req, res) =>{
+    res.render("signin");
+})
+
+app.post(
+    "/login",
+    passport.authenticate("local", { failureRedirect: "/login" }),
+    (req, res) => {
+      res.redirect("/home");
+    }
+  );
+
+app.get("/home", (req, res) => {
+    if (req.isAuthenticated()) {
+        User.findById({_id: req.user._id}).then((foundUser) =>{
+            if(foundUser.todayItems.length === 0)
+            {
+                defaultItems.forEach((item) =>{
+                    foundUser.todayItems.push(item);
+                });
+                foundUser.save().then(()=>{
+                    arrLists = foundUser.varLists;
+                    res.render("list", {listTitle: "Today", newListItem: defaultItems, route: "/home", lists: arrLists});
+                })
+            }
+            else
+            {
+                arrLists = foundUser.varLists;
+                res.render("list", {listTitle: "Today", newListItem: foundUser.todayItems, route: "/home", lists: arrLists});
+            }
+        });
+      } else {
+        res.redirect("/login");
+      }   
+    })
+
+app.post("/home", (req, res) =>{
     const itemName = req.body.listItem;
-
-    const newItem = new Item({
-        name: itemName
-    });
-
-    newItem.save();
-    res.redirect("/");
-
-    // items.push(req.body.listItem);
-    // res.redirect("/");
+    if(itemName === "")
+    {
+        res.redirect("/home");
+    }
+    else
+    {
+        const newItem = new Item({
+            name: itemName
+        });
+        User.findById({_id: req.user._id}).then(async (foundUser) =>{
+            foundUser.todayItems.push(newItem);
+            await foundUser.save();
+        }).then(()=>{
+            res.redirect("/home");
+        })
+    }
 })
 
 app.post("/delete", (req, res) =>{
     const idToDelete = req.body.checkBox;
+
     if(req.body.listTitle === "Today")
     {
-        Item.findByIdAndRemove(idToDelete)
-        .catch((err) =>{
-            console.log(err);
-        })
-        .then(()=>{
-            console.log("Successfully deleted checked item.");
-            res.redirect("/");
+        User.findById({_id: req.user._id}).then(async (foundUser) =>{
+            foundUser.todayItems.forEach((item) =>{
+                if(item.id === idToDelete)
+                {
+                    foundUser.todayItems.splice(foundUser.todayItems.indexOf(item), 1);
+                }
+            })
+            await foundUser.save();
+                
+        }).then(()=>{
+            res.redirect("/home");
         })
     }
     else
     {
-        console.log(idToDelete);
-        List.findOne({name: req.body.listTitle}).then((foundList) =>{
-            foundList.items.pull({_id: idToDelete});
-            foundList.save();
+        User.findById({_id: req.user._id}).then(async (foundUser) =>{
+            foundUser.varLists.forEach((result)=>{
+                if(result.name === req.body.listTitle)
+                {
+                   result.items.forEach((item)=>{
+                        if(item.id === idToDelete)
+                        {
+                           result.items.splice(result.items.indexOf(item), 1);
+                        }
+                    })
+                }
+            })
+            await foundUser.save();
+        }).then(()=>{
             res.redirect("/"+req.body.listTitle);
         })
     }
 })
 
-// app.get("/work", (req, res) => {
-//     res.render("list", {listTitle: "Work List", newListItem: workItems, route: "/work"});
-// })
+app.post("/deleteList", (req, res) =>{
+    User.findById({_id: req.user._id}).then(async (foundUser) =>{
+        foundUser.varLists.forEach((list)=>{
+            if(list.name === req.body.listTitle)
+            {
+                foundUser.varLists.splice(foundUser.varLists.indexOf(list), 1);
+            }
+        })
+        await foundUser.save();
+    }).then(()=>{
+        res.redirect("/home");
+    })
+})
+
+app.get("/addList", (req, res)=>{
+    if (req.isAuthenticated()) {
+        res.render("addList", {lists: arrLists});
+    }
+    else
+    {
+        res.redirect("/login");
+    }
+})
+
+app.post("/addList", (req, res)=>{
+    if(req.body.newList === "")
+    {
+        res.redirect("/addList");
+    }
+    else
+    {
+        const customListName = _.capitalize(req.body.newList);
+        User.findById({_id: req.user._id}).then(async (foundUser) =>{
+            foundUser.varLists.every((list)=>{
+                if(list.name === customListName)
+                {
+                    arrLists = foundUser.varLists;
+                    res.render("list", {listTitle: foundList.name , newListItem: foundList.items, route: "/"+foundList.name, lists: arrLists});
+                    return false;
+                }
+                else
+                {
+                    return true;
+                }
+            })
+            const list = new List({
+                name: customListName,
+                items: defaultItems
+            });
+            foundUser.varLists.push(list);
+            await foundUser.save().then(()=>{
+                res.redirect("/"+list.name);
+            })
+        })
+    }
+})
+
+app.get("/logout", (req, res) => {
+    req.logout(function (err) {
+      if (err) {
+        console.log(err);
+      }
+      res.redirect("/");
+    });
+  });
 
 app.get("/:category", (req, res) =>{
-    const customListName = _.capitalize(req.params.category);
+    if (req.isAuthenticated()) {
+        const customListName = _.capitalize(req.params.category);
 
-    List.findOne({name: customListName})
-    .then((foundList) =>{
-        res.render("list", {listTitle: foundList.name , newListItem: foundList.items, route: "/"+foundList.name});
-    }).catch((err) =>{
-        const list = new List({
-            name: customListName,
-            items: defaultItems
+        User.findById({_id: req.user._id}).then((foundUser) =>{
+            foundUser.varLists.forEach((list)=>{
+                if(list.name === customListName)
+                {
+                    arrLists = foundUser.varLists;
+                    res.render("list", {listTitle: list.name , newListItem: list.items, route: "/"+list.name, lists: arrLists});
+                }
+            })
         })
-        list.save();
-        res.render("list", {listTitle: list.name , newListItem: list.items, route: "/"+list.name});
-    })
+    }
+    else
+    {
+        res.redirect("/login");
+    }
 })
 
 app.post("/:category", (req, res) =>{
-    const newListItem = new Item({
-        name: req.body.listItem
-    })
-    
-    List.findOne({name: req.params.category})
-        .then((foundList) =>{
-           foundList.items.push(newListItem);
-           foundList.save();
-           res.redirect("/"+foundList.name)
+    if(req.body.listItem === "")
+    {
+        res.redirect("/"+req.params.category);
+    }
+    else
+    {
+        const newListItem = new Item({
+            name: req.body.listItem
+        });
+        User.findById({_id: req.user._id}).then(async (foundUser) =>{
+            foundUser.varLists.forEach((list)=>{
+                if(list.name === req.params.category)
+                {
+                    list.items.push(newListItem);
+                }
+            })
+            await foundUser.save();
+        }).then(()=>{
+            res.redirect("/"+req.params.category);
         })
+    }
 })
-
-// app.post("/work", (req, res) =>{
-//     workItems.push(req.body.listItem);
-//     res.redirect("/work");
-// })
-
-// app.get("/about", (req, res) =>{
-//     res.render("about");
-// })
 
 app.listen(3000, () => {
     console.log("Server is listening on port 3000");

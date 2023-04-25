@@ -1,0 +1,12 @@
+html{
+    background-image: -webkit-linear-gradient(65deg, #675D50 50%, #A9907E 50%);
+    min-height: 1000px;
+    font-family: 'helvetica neue';
+    background-attachment: fixed;
+}
+
+footer{
+    color: white;
+    text-align: center;
+    padding-top:150px;
+}

@@ -1,10 +1,72 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="styles.css">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://kit.fontawesome.com/0c270a201f.js" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="/styles.css" />
     <title>ToDo List</title>
-</head>
-<body>
+  </head>
+  <body>
+    <div id="mySidebar" class="sidebar">
+      <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">x</a>
+      <a href="/home" class="sidebar-options">Home</a>
+      <a href="/addList" class="sidebar-options">Add List Category</a>
+          <div id="dropdown-wrapper" class="dropdown-wrapper sidebar-options">
+            <a class="sidebar-options drop">My Lists <i class="fa-solid fa-caret-right"></i></a> 
+            <ul class="dropdown-list">
+              <form action="/deleteList" method="post">
+                <li>
+                  <a href="/home">Today</a>
+                </li>
+                <% for(let i=0;i<lists.length;i++){ %>
+                  <li>
+                    <a href="/<%= lists[i].name %>"><%= lists[i].name %></a>
+                    <button type="submit" class="fabutton" name="listTitle" value="<%= lists[i].name %>">
+                      <i class="fa-solid fa-trash"></i>
+                    </button>
+                  </li>
+                <%} %>
+            </form>
+            </ul>
+        </div>
+        <a href="/logout" class="sidebar-options">Logout</a>
+    </div>
+    
+    <div id="main">
+      <button class="openbtn" onclick="openNav()">☰</button>  
+    </div>
+    
+    <script>
+    function openNav() {
+      document.getElementById("mySidebar").style.left = "0";
+    }
+
+    if(document.querySelector(".dropdown-wrapper").addEventListener("mouseover", ()=>{
+        document.querySelector(".fa-solid").classList.remove("fa-caret-right");
+        document.querySelector(".fa-solid").classList.add("fa-caret-down");
+    }));
+    else if(document.querySelector(".dropdown-wrapper").addEventListener("mouseleave", ()=>{
+      document.querySelector(".fa-solid").classList.remove("fa-caret-down");
+      document.querySelector(".fa-solid").classList.add("fa-caret-right");
+    }));
+
+    function closeNav() {
+      document.getElementById("mySidebar").style.left = "-20.3125rem";
+    }
+
+    const dd = document.querySelector('#dropdown-wrapper');
+    const links = document.querySelector('.dropdown-list');
+
+    dd.addEventListener('mouseover', function() {
+      this.classList.add('is-active');
+    });
+    dd.addEventListener('mouseleave', function() {
+      this.classList.remove('is-active');
+    });
+    
+    links.addEventListener('mouseleave', function() {
+      dd.classList.toggle('is-active');
+    });
+
+    </script>
