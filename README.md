@@ -27,7 +27,7 @@ https://www.youtube.com/watch?v=pBVAyU4pZOU
 ## Step 3
 
 Create a .env file to hold your sensitive information i.e. credentials from Google and the secret you will use for setting up a Passport session.
-In my case, the session secret is under the name SECRET, and for Google credentials, the Client ID is under GOOGLE_CLIENT_ID and the Client Secret is under GOOGLE_CLIENT_SECRET. These go into your .env file
+In my case, the session secret is under the name SECRET, and for Google credentials, the Client ID is under CLIENT_ID and the Client Secret is under CLIENT_SECRET. These go into your .env file
 
 ## Step 4
 
