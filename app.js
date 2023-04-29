@@ -29,7 +29,7 @@ app.use(passport.session());
 main().catch(err => console.log(err));
 
 async function main() {
-    await mongoose.connect('process.env.MONGO')
+    await mongoose.connect("mongodb+srv://"+process.env.MONGO+"@todolist.nnosv2i.mongodb.net/toDoListDB")
 }
 
 const itemsSchema = new mongoose.Schema({
