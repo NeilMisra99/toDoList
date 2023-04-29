@@ -6,6 +6,8 @@ A simple to-do list site that is hosted online in its entirety and has been deve
 
 <img width="1800" alt="Screenshot 2023-04-27 at 3 35 44 PM" src="https://user-images.githubusercontent.com/116110498/235276968-a6161277-3d35-4ddf-b7b9-3ffd62b14bf3.png">
 
+<img width="1800" alt="Screenshot 2023-04-27 at 3 36 11 PM" src="https://user-images.githubusercontent.com/116110498/235277059-3752b210-4e05-46fe-918e-ffc87125d38d.png">
+
 <img width="1800" alt="Screenshot 2023-04-27 at 3 36 42 PM" src="https://user-images.githubusercontent.com/116110498/235276984-aa35fe4e-8e20-4e41-93ee-1116581560a9.png">
 
 
